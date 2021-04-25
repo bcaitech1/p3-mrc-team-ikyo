@@ -1,3 +1,47 @@
+## :sparkles: Stage 3 - MRC (Machine Reading Comprehension)
+> Hosted by [2021 Boostcamp AI Tech](https://boostcamp.connect.or.kr/)
+
+<p align="center">
+  <img width="250" src="https://github.com/bcaitech1/p3-mrc-team-ikyo/blob/main/img/logo.png">
+</p>    
+
+
+
+
+[1. Team Members](#1-team-members)  
+[2. Ground rules](#2-ground-rules)
+
+
+---
+
+### 1. Team Members
+<!--tech skill??? 추가????-->
+|Name|Github links|MBTI|
+|------|---|---|
+|Taeyang Kwon|테스트2|ENFJ|
+|Jaehee Ryu|테스트2|테스트3|
+|Jonghun Park|테스트2|테스트3|
+|Hyeonkyu Lee|테스트2|테스트3|
+|Suzie Oh|https://github.com/ohsuz<br>https://www.ohsuz.dev/|ENTP|
+|Ikhyo Jung|테스트2|테스트3|
+
+<!--
+🤖 [Taeyang Kwon](https://github.com/ohsuz)  
+🤖 [Jaehee Ryu](https://github.com/ohsuz)  
+🤖 [Jonghun Park](https://github.com/ohsuz)  
+🤖 [Hyeonkyu Lee](https://github.com/ohsuz)  
+🤖 [Suzie Oh](https://github.com/ohsuz)  
+🤖 [Suzie Oh](https://github.com/ohsuz)  
+-->
+
+---
+
+### 2. Ground rules
+
+
+
+
+<!--
 ## TEAM-IKYO
 
 ### Stage 3 - MRC (Machine Reading Comprehension) :question: :exclamation:
@@ -10,3 +54,4 @@
 > **권태양, 류재희, 박종헌, 오수지, 이현규, 정익효**
 
 ### 2. Ground rule
+-->
