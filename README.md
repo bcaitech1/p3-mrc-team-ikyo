@@ -21,7 +21,7 @@
 |Taeyang Kwon|[Github](https://github.com/sunnight9507)<br>[Notion](https://www.notion.so/Sunny-1349e293c9f74de092dce9ee359bd77c)|ENFJ|
 |Jaehee Ryu|테스트2|테스트3|
 |Jonghun Park|테스트2|테스트3|
-|Hyeonkyu Lee|테스트2|테스트3|
+|Hyeonkyu Lee|[Github](https://github.com/LeeHyeonKyu)<br>[Notion](https://www.notion.so/thinkwisely/Naver-Boost-Camp-AI-Tech-ba743126e68749d58bdbb7af0580c8ee)|ESTJ|
 |Suzie Oh|[Github](https://github.com/ohsuz)<br>[Notion](https://www.ohsuz.dev/)|ENTP|
 |Ikhyo Jung|테스트2|테스트3|
 
