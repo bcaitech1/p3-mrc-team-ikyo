@@ -20,7 +20,7 @@
 |------|---|---|
 |Taeyang Kwon|[Github](https://github.com/sunnight9507)<br>[Notion](https://www.notion.so/Sunny-1349e293c9f74de092dce9ee359bd77c)|ENFJ|
 |Jaehee Ryu|[Github](https://github.com/JaeheeRyu)<br>[Notion](https://www.notion.so/Sunny-1349e293c9f74de092dce9ee359bd77c)|ISTP|
-|Jonghun Park|[Github](https://github.com/PJHgh)<br>[Notion](https://www.notion.so/Boostcamp-deef2c0783f24c0b8022ba30b5782986)|ISTP|
+|Jonghun Park|[Github](https://github.com/PJHgh)<br>[Notion](https://www.notion.so/Boostcamp-deef2c0783f24c0b8022ba30b5782986)|INTJ|
 |Hyeonkyu Lee|[Github](https://github.com/LeeHyeonKyu)<br>[Notion](https://www.notion.so/thinkwisely/Naver-Boost-Camp-AI-Tech-ba743126e68749d58bdbb7af0580c8ee)|ESTJ|
 |Suzie Oh|[Github](https://github.com/ohsuz)<br>[Notion](https://www.ohsuz.dev/)|ENTP|
 |Ikhyo Jung|테스트2|테스트3|
