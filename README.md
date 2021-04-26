@@ -23,7 +23,7 @@
 |Jonghun Park|[Github](https://github.com/PJHgh)<br>[Notion](https://www.notion.so/Boostcamp-deef2c0783f24c0b8022ba30b5782986)|INTJ|
 |Hyeonkyu Lee|[Github](https://github.com/LeeHyeonKyu)<br>[Notion](https://www.notion.so/thinkwisely/Naver-Boost-Camp-AI-Tech-ba743126e68749d58bdbb7af0580c8ee)|ESTJ|
 |Suzie Oh|[Github](https://github.com/ohsuz)<br>[Notion](https://www.ohsuz.dev/)|ENTP|
-|Ikhyo Jung|테스트2|테스트3|
+|Ikhyo Jung|[Github](https://github.com/dlrgy22)|INFP|
 
 <!--
 🤖 [Taeyang Kwon](https://github.com/sunnight9507)  
