@@ -257,11 +257,11 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
                 scaler.update()
                 optim.zero_grad()
 
-                description = f"epoch {epoch} | loss: {running_loss/sample_num: .4f} | best_f1: {prev_f1: .4f}"
+                global_steps += 1
+                description = f"{epoch}epoch {global_steps: >4d}step | loss: {running_loss/sample_num: .4f} | best_f1: {prev_f1: .4f}"
                 pbar.set_description(description)
 
                 # validating phase
-                global_steps += 1
                 if global_steps % training_args.logging_steps == 0 :
                     with torch.no_grad():
                         val_metric = validating_per_steps(epoch, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device)
