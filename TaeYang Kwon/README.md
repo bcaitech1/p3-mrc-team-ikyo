@@ -29,7 +29,7 @@
 ### How to Use
 
 - **train.py 실행**
-  - python train.py --output_dir ./models/train_dataset --do_train --overwrite_cache
+  - python train.py --output_dir ./models/train_dataset --do_train --do_eval --overwrite_cache
 
 - **inference.py 실행**
   - python inference.py --output_dir ../outputs/test_dataset/ --dataset_name ../input/data/data/test_dataset/ --model_name_or_path ./models/train_dataset/ --do_predict --overwrite_output_dir
