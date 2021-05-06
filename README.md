@@ -4,7 +4,8 @@
 <p align="center">
   <img width="250" src="https://github.com/bcaitech1/p3-mrc-team-ikyo/blob/main/img/logo.png">
 </p>    
-  
+
+
 
 
 [1. Team Members](#1-team-members)  
@@ -13,9 +14,7 @@
 
 ---
 
-### 1. Team Members  
-> [Team Notion 바로가기](https://www.notion.so/TEAM-IKYO-23ba9997d0ca410f9cbfcbfca177e819)
-
+### 1. Team Members
 <!--tech skill??? 추가????-->
 |Name|Github links|MBTI|
 |------|---|---|
