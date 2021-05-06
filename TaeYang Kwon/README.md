@@ -13,18 +13,19 @@
   - 형태소 기준으로 단어만 check(**연속된 단어는 하나의 단어**라고 가정 ex) "조선" "중기" => "조선 중기")
     - 기존 baseline보다 더 떨어짐..
     - Why? vocab수가 너무 많이 늘어남
-  - BM25 + mecab 형태소 기준으로 tokenizing
+  - **`BM25`** + mecab 형태소 기준으로 tokenizing
     - 기존 baseline보다 precision@1 기준 30% 성능 향상
-  - BM25 + mecab 단어(2글자 이상) 기준으로 tokenizing
-    - BM25 + mecab 형태소 성능보다 약 5% 낮음.
 - **`Reader`**
+  - Data preprocessing
+    - 필요 없는 **특수 문자 제거** ex) \n, \s+ ... => EM 기준 약1.5% 상승 & F1 score 기준 2% 상승
   - model 변경
-    - bert-base-multilingual-cased -> monologg/koelectra-base-v3-discriminator
-
-### 적용한 IDEA
-
-> - BM25
-> - monologg/koelectra-base-v3-discriminator
+    - bert-base-multilingual-cased -> monologg/koelectra-base-v3-discriminator -> xlm-roberta-large
+  - Data augmentation
+    - **`Question`**에서 **단어만 확률적으로 Masking**(20% 확률로 적용) => EM 기준 약1.5% 상승 & F1 score 기준 약 10% 상승
+    - 재희님 Question Augmentation 적용 (**역번역 활용하여 Question 데이터 증강**) => 
+- **`Inference`**
+  - **`Top k`** 인 context concat 후 Reader
+  - Reader로 부터 나온 **answer postprocessing** ex) 은, 는, 의.. 제거
 
 ### How to Use
 
