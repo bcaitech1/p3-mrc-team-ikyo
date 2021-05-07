@@ -168,7 +168,34 @@ def create_and_fill_np_array(start_or_end_logits, dataset, max_len):
     return logits_concat
 
 
-def validating_per_steps(epcoh, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device):
+def training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device):
+    model.train()
+    with autocast():
+        mask_props = 0.8
+        mask_p = random.random()
+        if mask_p < mask_props:
+            # 확률 안에 들면 mask 적용
+            batch = custom_to_mask(batch, tokenizer)
+
+        batch = batch.to(device)
+        outputs = model(**batch)
+
+        # output안에 loss가 들어있는 형태
+        loss = outputs.loss
+        scaler.scale(loss).backward()
+
+        # loss 계산
+        running_loss += loss.item()*training_args.per_device_train_batch_size
+        sample_num += training_args.per_device_train_batch_size
+
+        scaler.step(optimizer)
+        scaler.update()
+        optimizer.zero_grad()
+
+    return running_loss/sample_num
+
+
+def validating_per_steps(epoch, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device):
     metric = load_metric("squad")
     if "xlm" in model_args.model_name_or_path:
         test_dataset.set_format(type="torch", columns=["attention_mask", "input_ids"])
@@ -229,58 +256,39 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
     prev_f1 = 0
     global_steps = 0
     for epoch in range(int(training_args.num_train_epochs)):
-        # training phase
         running_loss, sample_num = 0, 0
-        mask_props = 0.8
-
         pbar = tqdm(enumerate(train_loader), total=len(train_loader), position=0, leave=True)
         for step, batch in pbar:
-            model.train()
-            with autocast():
-                mask_p = random.random()
-                if mask_p < mask_props:
-                    # 확률 안에 들면 mask 적용
-                    batch = custom_to_mask(batch, tokenizer)
+            # training phase
+            train_loss = training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device)
+            global_steps += 1
+            description = f"{epoch}epoch {global_steps: >4d}step | loss: {train_loss: .4f} | best_f1: {prev_f1: .4f}"
+            pbar.set_description(description)
 
-                batch = batch.to(device)
-                outputs = model(**batch)
+            # validating phase
+            if global_steps % training_args.logging_steps == 0 :
+                with torch.no_grad():
+                    val_metric = validating_per_steps(epoch, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device)
+                if val_metric["f1"] > prev_f1:
+                    model_name = model_args.model_name_or_path
+                    model_name = model_name.split("/")[-1]
+                    # backborn 모델의 이름으로 저장 => make submission의 tokenizer부분에 사용하기 위하여
+                    torch.save(model, training_args.output_dir + f"/{model_name}.pt")
+                    prev_f1 = val_metric["f1"]
+                wandb.log({
+                'train/loss' : running_loss/sample_num,
+                'train/learning_rate' : scheduler.get_last_lr()[0] if scheduler is not None else training_args.learning_rate,
+                'eval/exact_match' : val_metric['exact_match'],
+                'eval/f1_score' : val_metric['f1'],
+                'global_steps': global_steps
+                })
+                running_loss, sample_num = 0, 0
+            else : 
+                wandb.log({'global_steps':global_steps})
+    
+    if scheduler is not None :
+        scheduler.step()
 
-                # output안에 loss가 들어있는 형태
-                loss = outputs.loss
-                scaler.scale(loss).backward()
-
-                # loss 계산
-                running_loss += loss.item()*training_args.per_device_train_batch_size
-                sample_num += training_args.per_device_train_batch_size
-
-                scaler.step(optim)
-                scaler.update()
-                optim.zero_grad()
-
-                global_steps += 1
-                description = f"{epoch}epoch {global_steps: >4d}step | loss: {running_loss/sample_num: .4f} | best_f1: {prev_f1: .4f}"
-                pbar.set_description(description)
-
-                # validating phase
-                if global_steps % training_args.logging_steps == 0 :
-                    with torch.no_grad():
-                        val_metric = validating_per_steps(epoch, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device)
-                        if val_metric["f1"] > prev_f1:
-                            model_name = model_args.model_name_or_path
-                            model_name = model_name.split("/")[-1]
-                            # backborn 모델의 이름으로 저장 => make submission의 tokenizer부분에 사용하기 위하여
-                            torch.save(model, training_args.output_dir + f"/{model_name}.pt")
-                            prev_f1 = val_metric["f1"]
-                    wandb.log({
-                    'train/loss' : running_loss/sample_num,
-                    'train/learning_rate' : scheduler.get_last_lr()[0] if scheduler is not None else training_args.learning_rate,
-                    'eval/exact_match' : val_metric['exact_match'],
-                    'eval/f1_score' : val_metric['f1'],
-                    'global_steps': global_steps
-                    })
-                    running_loss, sample_num = 0, 0
-                else : 
-                    wandb.log({'global_steps':global_steps})
 
 def main():
     model_args, data_args, training_args = get_config()
