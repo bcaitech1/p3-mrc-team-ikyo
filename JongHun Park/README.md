@@ -25,15 +25,15 @@ python3 mk_retrieval_dataset.py --top_k 20 \
 ```bash
 \_opt\_ml\
     \_input\_retrieval_dataset
-	\_dense_preprocess_wiki.json
-        \_Top***k***_preprocess_test.pkl  # k는 top_k로 설정됨
-	\_Top***k***_preprocess_train.pkl
-	\_Top***k***_preprocess_valid.pkl
+		\_dense_preprocess_wiki.json
+		\_Top***k***_preprocess_test.pkl  # k는 top_k로 설정됨
+		\_Top***k***_preprocess_train.pkl
+		\_Top***k***_preprocess_valid.pkl
     \_retrieval_output
 	\_run_name # 매 실험마다 생성
-                \_model
-		        \_p_run_name.pt
-                        \_q_run_name.pt
+            \_model
+		\_p_run_name.pt
+                \_q_run_name.pt
 ```
 
 ## Installation
