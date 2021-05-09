@@ -5,14 +5,14 @@
 ```bash
 \_opt\_ml\
     \_input\_data
-				\_ data # 주최측 제공 Data
-						\_ dummy_dataset
-								\_ ...
-						\_ test_dataset
-								\_ ...
-						\_ train_dataset
-								\_ ...
-						\_ wikipedia_documents.json
+	\_ data # 주최측 제공 Data
+		\_ dummy_dataset
+			\_ ...
+		\_ test_dataset
+			\_ ...
+		\_ train_dataset
+			\_ ...
+		\_ wikipedia_documents.json
     \_output # Directory 생성 필요
 ```
 
@@ -21,18 +21,17 @@
 ```bash
 \_opt\_ml\
     \_input\_data
-				\_data # 주최측 제공 Data
-						\_ ...
+	\_data # 주최측 제공 Data
+		\_ ...
         \_add_squad_kor_v1_2.pkl
-				\_preprocess_train.pkl
-				\_train_concat5.pkl
-				\_preprocess_wiki.json
+	\_preprocess_train.pkl
+	\_train_concat5.pkl
+	\_preprocess_wiki.json
     \_output
-				\_ korquard_pretrained_model
-						\_korquard_pretrained_model.pt
-				\_run_name # 매 실험마다 생성
-						\_run_name.pt # 매 실험마다 생성
-						\_run_name.pt # 매 실험마다 생성
+	\_ korquard_pretrained_model
+		\_korquard_pretrained_model.pt
+	\_run_name # 매 실험마다 생성
+		\_run_name.pt # 매 실험마다 생성
 ```
 
 ## Installation
