@@ -53,33 +53,33 @@ elasticsearch-7.6.2/bin/elasticsearch-plugin install analysis-nori
 
 ```bash
 python3 train_mrc.py --output_dir /opt/ml/output \
-                        --model_name_or_path xlm-roberta-large \
-                        --tokenizer_name xlm-roberta-large \
-                        --config_name xlm-roberta-large \
-                        --learning_rate 0.00001 \
-                        --num_train_epoch 5 \
-                        --per_device_train_batch_size 16 \
-                        --per_device_eval_batch_size 16 \
-                        --dataset_name only_korquad \
-                        --use_custom_model \  # custom_model 사용하지 않을 경우 주석 처리
-                        --run_name korquard_pretrained_model
+                     --model_name_or_path xlm-roberta-large \
+                     --tokenizer_name xlm-roberta-large \
+                     --config_name xlm-roberta-large \
+                     --learning_rate 0.00001 \
+                     --num_train_epoch 5 \
+                     --per_device_train_batch_size 16 \
+                     --per_device_eval_batch_size 16 \
+                     --dataset_name only_korquad \
+                     --use_custom_model \  # custom_model 사용하지 않을 경우 주석 처리
+                     --run_name korquard_pretrained_model
 ```
 
 ## Train mrc
 
 ```bash
 python3 train_mrc.py --output_dir /opt/ml/output \
-                        --model_name_or_path /opt/ml/output/korquard_pretrained_model/korquard_pretrained_model.pt \ #(inference 하고자하는 모델의 경로)
-                        --tokenizer_name xlm-roberta-large \
-                        --config_name xlm-roberta-large \
-                        --use_pretrained_koquard_model \
-                        --use_custom_model \
-                        --learning_rate 0.00001 \
-                        --num_train_epoch 5 \
-                        --per_device_train_batch_size 16 \
-                        --per_device_eval_batch_size 16 \
-	                      --dataset_name concat \ # 'basic', 'preprocess', 'concat', 'korquad', 'only_korquad'
-                        --run_name ***run_name*** # run_name은 바꿔야 함.
+                     --model_name_or_path /opt/ml/output/korquard_pretrained_model/korquard_pretrained_model.pt \ #(inference 하고자하는 모델의 경로)
+                     --tokenizer_name xlm-roberta-large \
+                     --config_name xlm-roberta-large \
+                     --use_pretrained_koquard_model \
+                     --use_custom_model \
+                     --learning_rate 0.00001 \
+                     --num_train_epoch 5 \
+                     --per_device_train_batch_size 16 \
+                     --per_device_eval_batch_size 16 \
+	             --dataset_name concat \ # 'basic', 'preprocess', 'concat', 'korquad', 'only_korquad'
+                     --run_name ***run_name*** # run_name은 바꿔야 함.
 ```
 
 ## Inference
@@ -87,9 +87,9 @@ python3 train_mrc.py --output_dir /opt/ml/output \
 ```bash
 # Inference
 python3 inference.py --output_dir /opt/ml/output/***run_name*** \ # run_name은 바꿔야 함. 
-                    --model_name_or_path /opt/ml/output/***run_name***/***run_name***.pt \ # run_name은 바꿔야 함. (inference 하고자하는 모델의 경로)
-                    --tokenizer_name xlm-roberta-large \
-                    --config_name xlm-roberta-large \
-                    --retrival_type elastic \
-                    --use_custom_model # custom_model 사용하지 않을 경우 주석 처리
+                     --model_name_or_path /opt/ml/output/***run_name***/***run_name***.pt \ # run_name은 바꿔야 함. (inference 하고자하는 모델의 경로)
+                     --tokenizer_name xlm-roberta-large \
+                     --config_name xlm-roberta-large \
+                     --retrival_type elastic \
+                     --use_custom_model # custom_model 사용하지 않을 경우 주석 처리
 ```
