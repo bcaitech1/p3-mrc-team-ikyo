@@ -78,7 +78,7 @@ def get_model(model_args, training_args) :
     return tokenizer, model_config, model, optimizer, scaler, scheduler 
 
 
-def get_pickle(pickle_path):
+def get_pickle(pickle_path) :
     '''Custom Dataset을 Load하기 위한 함수'''
     f = open(pickle_path, "rb")
     dataset = pickle.load(f)
@@ -285,8 +285,8 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
             else : 
                 wandb.log({'global_steps':global_steps})
     
-    if scheduler is not None :
-        scheduler.step()
+        if scheduler is not None :
+            scheduler.step()
 
 
 def main():
