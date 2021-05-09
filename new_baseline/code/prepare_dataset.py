@@ -74,6 +74,7 @@ def make_custom_dataset(dataset_path) :
                         'id': Value(dtype='string', id=None),
                         'question': Value(dtype='string', id=None)})
 
+    # preprocess_wiki.json 생성
     if not os.path.isfile("/opt/ml/input/data/preprocess_wiki.json") :
         with open("/opt/ml/input/data/data/wikipedia_documents.json", "r") as f:
             wiki = json.load(f)
