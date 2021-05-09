@@ -4,4 +4,4 @@
 
 #### 적용한 IDEA
 
-> - ex) ner tag 적용
+> 음절 단위 Tokenizing 보류
