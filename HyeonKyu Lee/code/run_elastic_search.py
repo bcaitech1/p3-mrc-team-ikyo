@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 
 from elasticsearch import Elasticsearch
 from datasets import load_from_disk
@@ -45,6 +45,7 @@ def set_index_and_server() :
                     preexec_fn=lambda: os.setuid(1)  # as daemon
                     )
     time.sleep(30)
+
     config = {'host':'localhost', 'port':9200}
     es = Elasticsearch([config])
 
@@ -76,17 +77,20 @@ def set_index_and_server() :
         }
 
     index_name = 'nori-index'
-    es.indices.create(index=index_name, body=index_config, ignore=400)
+    print('elastic serach ping :', es.ping())
+    print(es.indices.create(index=index_name, body=index_config, ignore=400))
 
     return es, index_name
 
 
 def main() :
     print('Start to Set Elastic Search')
+    print('It takes almost 8 minutes')
     _, wiki_articles = set_datas()
     es, index_name = set_index_and_server()
     populate_index(es_obj=es, index_name=index_name, evidence_corpus=wiki_articles)
     print('Finish')
+
 
 if __name__ == '__main__' : 
     main()
