@@ -1,0 +1,1 @@
+{"global_steps": 9328, "_runtime": 6103, "_timestamp": 1620545546, "_step": 9327, "train/loss": 0.05363265826880524, "train/learning_rate": 8.145033635316128e-06, "eval/exact_match": 52.083333333333336, "eval/f1_score": 62.96699134199137}
