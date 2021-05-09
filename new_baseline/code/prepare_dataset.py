@@ -46,6 +46,13 @@ def run_preprocess(data_dict):
     return data_dict
 
 
+def run_preprocess_to_wiki(data_dict):
+    context = data_dict["text"]
+    process_data = preprocess(context)
+    data_dict["text"] = process_data
+    return data_dict
+
+
 def search_es(es_obj, index_name, question_text, n_results):
     query = {
             'query': {
@@ -59,18 +66,29 @@ def search_es(es_obj, index_name, question_text, n_results):
 
 
 def make_custom_dataset(dataset_path) :
-    if not os.path.isdir("/opt/ml/input/data/train_dataset") :
-        raise Exception ("Set the data path to '/opt/ml/input/data/.'")
+    if not (os.path.isdir("/opt/ml/input/data/data/train_dataset") or os.path.isdir("/opt/ml/input/data/data/wikipedia_documents.json")) :
+        raise Exception ("Set the original data path to '/opt/ml/input/data/data/.'")
     
     train_f = Features({'answers': Sequence(feature={'text': Value(dtype='string', id=None), 'answer_start': Value(dtype='int32', id=None)}, length=-1, id=None),
                         'context': Value(dtype='string', id=None),
                         'id': Value(dtype='string', id=None),
                         'question': Value(dtype='string', id=None)})
 
+    if not os.path.isfile("/opt/ml/input/data/preprocess_wiki.json") :
+        with open("/opt/ml/input/data/data/wikipedia_documents.json", "r") as f:
+            wiki = json.load(f)
+
+        new_wiki = dict()
+        for ids in range(len(wiki)):
+            new_wiki[str(ids)] = run_preprocess_to(wiki[str(ids)])
+
+        with open('/opt/ml/input/data/preprocess_wiki.json', 'w', encoding='utf-8') as make_file:
+            json.dump(new_wiki, make_file, indent="\t", ensure_ascii=False)
+
     if not os.path.isfile("/opt/ml/input/data/preprocess_train.pkl") :
-        train_data = load_from_disk("/opt/ml/input/data/train_dataset")['train']
-        val_data = load_from_disk("/opt/ml/input/data/train_dataset")['validation']
-        test_data = load_from_disk("/opt/ml/input/data/test_dataset")['validation']
+        train_data = load_from_disk("/opt/ml/input/data/data/train_dataset")['train']
+        val_data = load_from_disk("/opt/ml/input/data/data/train_dataset")['validation']
+        test_data = load_from_disk("/opt/ml/input/data/data/test_dataset")['validation']
         
         new_train_data, new_val_data = [], []
         for data in train_data:
