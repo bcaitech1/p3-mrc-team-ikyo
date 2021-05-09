@@ -10,9 +10,10 @@ import torch
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+from torch import nn
 from torch.utils.data import DataLoader
 from torch.cuda.amp import autocast, GradScaler
-from datasets import load_metric, load_from_disk
+from datasets import load_metric, load_from_disk, load_dataset
 from transformers import AutoConfig, AutoModelForQuestionAnswering, AutoTokenizer, AdamW
 from transformers import (
     DataCollatorWithPadding,
@@ -22,6 +23,7 @@ from transformers import (
     set_seed,
 )
 
+from my_model import Mymodel
 from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
@@ -66,11 +68,18 @@ def get_model(model_args, training_args) :
         else model_args.model_name_or_path,
         use_fast=True,
     )
-    model = AutoModelForQuestionAnswering.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=model_config,
-    )
+    if model_args.use_pretrained_koquard_model:
+        model = torch.load(model_args.model_name_or_path)
+
+    elif model_args.use_custom_model:
+        model = Mymodel(model_args.config_name, model_config)
+
+    else:
+        model = AutoModelForQuestionAnswering.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=model_config,
+        )
     optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
     scaler = GradScaler()
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer=optimizer, T_max=10, eta_min=1e-6)
@@ -78,14 +87,13 @@ def get_model(model_args, training_args) :
     return tokenizer, model_config, model, optimizer, scaler, scheduler 
 
 
-def get_pickle(pickle_path) :
+def get_pickle(pickle_path):
     '''Custom Dataset을 Load하기 위한 함수'''
     f = open(pickle_path, "rb")
     dataset = pickle.load(f)
     f.close()
 
     return dataset
-
 
 def get_data(data_args, training_args, tokenizer) :
     '''train과 validation의 dataloader와 dataset를 반환하는 함수'''
@@ -100,17 +108,20 @@ def get_data(data_args, training_args, tokenizer) :
         else :
             text_data = make_custom_dataset("/opt/ml/input/data/preprocess_train.pkl")
     elif data_args.dataset_name == 'concat' :
-        if os.path.isfile("/opt/ml/input/data/train_concat7.pkl") :
-            text_data = get_pickle("/opt/ml/input/data/train_concat7.pkl")
+        if os.path.isfile("/opt/ml/input/data/train_concat5.pkl") :
+            text_data = get_pickle("/opt/ml/input/data/train_concat5.pkl")
         else :
-            text_data = make_custom_dataset("/opt/ml/input/data/train_concat7.pkl")
+            text_data = make_custom_dataset("/opt/ml/input/data/train_concat5.pkl")
     elif data_args.dataset_name == 'korquad' :
         if os.path.isfile("/opt/ml/input/data/add_squad_kor_v1_2.pkl") :
             text_data = get_pickle("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
         else :
             text_data = make_custom_dataset("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
+    elif data_args.dataset_name == "only_korquad":
+        text_data = load_dataset("squad_kor_v1")
+
     else :
-        raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad']")
+        raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad]")
 
     train_text = text_data['train']
     val_text = text_data['validation']
@@ -188,6 +199,27 @@ def custom_to_mask(batch, tokenizer):
     
     return batch
 
+def cal_loss(start_positions, end_positions, start_logits, end_logits):
+    total_loss =None
+    if start_positions is not None and end_positions is not None:
+        # If we are on multi-GPU, split add a dimension
+        if len(start_positions.size()) > 1:
+            start_positions = start_positions.squeeze(-1)
+        if len(end_positions.size()) > 1:
+            end_positions = end_positions.squeeze(-1)
+
+        # sometimes the start/end positions are outside our model inputs, we ignore these terms
+        ignored_index = start_logits.size(1)
+        start_positions.clamp_(0, ignored_index)
+        end_positions.clamp_(0, ignored_index)
+
+        loss_fct = nn.CrossEntropyLoss(ignore_index=ignored_index)
+        start_loss = loss_fct(start_logits, start_positions)
+        end_loss = loss_fct(end_logits, end_positions)
+        total_loss = (start_loss + end_loss) / 2
+
+    return total_loss
+
 
 def training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device):
     '''매 step마다 학습을 하는 함수'''
@@ -203,7 +235,10 @@ def training_per_step(model, optimizer, scaler, batch, model_args, data_args, tr
         outputs = model(**batch)
 
         # output안에 loss가 들어있는 형태
-        loss = outputs.loss
+        if model_args.use_custom_model:
+            loss = cal_loss(batch["start_positions"], batch["end_positions"], outputs["start_logits"], outputs["end_logits"])
+        else:
+            loss = outputs.loss
         scaler.scale(loss).backward()
         scaler.step(optimizer)
         scaler.update()
@@ -215,7 +250,7 @@ def training_per_step(model, optimizer, scaler, batch, model_args, data_args, tr
 def validating_per_steps(epoch, model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device):
     '''특정 step마다 검증을 하는 함수'''
     metric = load_metric("squad")
-    if "xlm" in model_args.model_name_or_path:
+    if "xlm" in model_args.tokenizer_name:
         test_dataset.set_format(type="torch", columns=["attention_mask", "input_ids"])
     else:
         test_dataset.set_format(type="torch", columns=["attention_mask", "input_ids", "token_type_ids"])
@@ -227,8 +262,12 @@ def validating_per_steps(epoch, model, text_data, test_loader, test_dataset, mod
     for batch in test_loader :
         batch = batch.to(device)
         outputs = model(**batch)
-        start_logits = outputs.start_logits
-        end_logits = outputs.end_logits
+        if model_args.use_custom_model:
+            start_logits = outputs["start_logits"]
+            end_logits = outputs["end_logits"]
+        else:
+            start_logits = outputs.start_logits
+            end_logits = outputs.end_logits
         
         all_start_logits.append(start_logits.detach().cpu().numpy())
         all_end_logits.append(end_logits.detach().cpu().numpy())
@@ -252,6 +291,7 @@ def validating_per_steps(epoch, model, text_data, test_loader, test_dataset, mod
 def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, train_dataset, test_dataset, scheduler, model_args, data_args, training_args, tokenizer, device):
     '''training과 validating을 진행하는 함수'''
     prev_f1 = 0
+    prev_em = 0
     global_steps = 0
     train_loss = AverageMeter()
     for epoch in range(int(training_args.num_train_epochs)):
@@ -261,7 +301,7 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
             loss = training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device)
             train_loss.update(loss, len(batch['input_ids']))
             global_steps += 1
-            description = f"{epoch+1}epoch {global_steps: >4d}step | loss: {train_loss.avg: .4f} | best_f1: {prev_f1: .4f}"
+            description = f"{epoch+1}epoch {global_steps: >4d}step | loss: {train_loss.avg: .4f} | best_f1: {prev_f1: .4f} | em : {prev_em: .4f}"
             pbar.set_description(description)
 
             # validating phase
@@ -272,8 +312,12 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
                     model_name = model_args.model_name_or_path
                     model_name = model_name.split("/")[-1]
                     # backborn 모델의 이름으로 저장 => make submission의 tokenizer부분에 사용하기 위하여
-                    torch.save(model, training_args.output_dir + f"/{model_name}.pt")
+                    if data_args.dataset_name == "only_korquad":
+                        torch.save(model, training_args.output_dir + "/koquard_pretrained_model.pt")
+                    else:
+                        torch.save(model, training_args.output_dir + f"/{training_args.run_name}.pt")
                     prev_f1 = val_metric["f1"]
+                    prev_em = val_metric["exact_match"]
                 wandb.log({
                 'train/loss' : train_loss.avg,
                 'train/learning_rate' : scheduler.get_last_lr()[0] if scheduler is not None else training_args.learning_rate,
@@ -292,6 +336,7 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
 def main():
     '''각종 설정 이후 train_mrc를 실행하는 함수'''
     model_args, data_args, training_args = get_args()
+    training_args.output_dir = os.path.join(training_args.output_dir, training_args.run_name)
     set_seed_everything(training_args.seed)
     device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

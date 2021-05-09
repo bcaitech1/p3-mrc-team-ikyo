@@ -121,7 +121,7 @@ def make_custom_dataset(dataset_path) :
         # train concat데이터셋 만들기
         for step, question in enumerate(train_qa):
             # 5 => k의 수 (뽑아올 수)
-            res = search_es(es, "nori-index", question["question"], 7)
+            res = search_es(es, "nori-index", question["question"], 5)
             context_list = [(hit['_source']['document_text'], hit['_score']) for hit in res['hits']['hits']]
             add_text = train_qa[step]["context"]
             count = 0
@@ -131,13 +131,13 @@ def make_custom_dataset(dataset_path) :
                     continue
                 add_text += " " + context[0]
                 count += 1
-                if count == 6:
+                if count == 4:
                     break
             train_qa[step]["context"] = add_text
 
         # validation도 똑같이 사용
         for step, question in enumerate(validation_qa):
-            res = search_es(es, "nori-index", question["question"], 7)
+            res = search_es(es, "nori-index", question["question"], 5)
             context_list = [(hit['_source']['document_text'], hit['_score']) for hit in res['hits']['hits']]
             add_text = validation_qa[step]["context"]
             count = 0
@@ -146,13 +146,13 @@ def make_custom_dataset(dataset_path) :
                     continue
                 add_text += " " + context[0]
                 count += 1
-                if count == 6:
+                if count == 4:
                     break
             validation_qa[step]["context"] = add_text
         
         train_df = pd.DataFrame(train_qa)
         val_df = pd.DataFrame(validation_qa)
         train_datasets = DatasetDict({'train': Dataset.from_pandas(train_df, features=train_f), 'validation': Dataset.from_pandas(val_df, features=train_f)})
-        save_pickle("/opt/ml/input/data/train_concat7.pkl", train_datasets)
+        save_pickle("/opt/ml/input/data/train_concat5.pkl", train_datasets)
         
         return train_datasets

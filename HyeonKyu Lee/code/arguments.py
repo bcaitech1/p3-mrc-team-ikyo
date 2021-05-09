@@ -10,11 +10,22 @@ class ModelArguments:
         default="bert-base-multilingual-cased",
         metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
+    use_custom_model: bool = field(
+        default=False,
+        metadata={"help": "use custom model"}
+    )
+    use_pretrained_koquard_model: bool = field(
+        default=False,
+        metadata={"help": "use_pretrained_koquard_model"}
+    )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
     )
     tokenizer_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
+    )
+    retrival_type: Optional[str] = field(
+        default="elastic", metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
     )
 
 @dataclass
@@ -23,7 +34,7 @@ class DataTrainingArguments:
     Arguments pertaining to what data we are going to input our model for training and eval.
     """
     dataset_name: Optional[str] = field(
-        default="preprocessed", metadata={"help": "Choose one of ['basic', 'preprocessed', 'concat', 'korquad']"}
+        default="preprocessed", metadata={"help": "Choose one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_koquard']"}
     )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
