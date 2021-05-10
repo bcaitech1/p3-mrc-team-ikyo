@@ -220,7 +220,7 @@ def make_submission(scores, training_args):
     mecab = Mecab()
     kkma = Kkma()
     hannanum = Hannanum()
-    with open(os.path.join(training_args.output_dir, "nbest_predictions.json"), "r") as f:
+    with open("/opt/ml/lastcode/submission/nbest_predictions.json", "r") as f:
         nbest = json.load(f)
 
     prediction = dict()
