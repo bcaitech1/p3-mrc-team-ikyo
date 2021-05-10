@@ -18,7 +18,7 @@ from transformers import (
     set_seed,
 )
 
-from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, my_tokenize
+from utils_qa import postprocess_qa_predictions, check_no_error, tokenize
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
 
@@ -29,6 +29,8 @@ from arguments import (
 
 import json
 from konlpy.tag import Mecab
+from konlpy.tag import Kkma
+from konlpy.tag import Hannanum
 from tqdm import tqdm
 from rank_bm25 import BM25Okapi
 import pandas as pd
@@ -61,7 +63,6 @@ def main():
     set_seed(training_args.seed)
 
     datasets = load_from_disk(data_args.dataset_name)
-    
 
     # Load pretrained model and tokenizer
     config = AutoConfig.from_pretrained(
@@ -107,7 +108,8 @@ def run_bm25(datasets):
         tmp["question"] = datasets["validation"][i]["question"]
         tmp["id"] = datasets["validation"][i]["id"]
         query = datasets["validation"][i]["question"]
-        tmp["context"] = bm25.get_top_n(tokenize(query), wiki, 1)[0]
+        # tmp["context"] = bm25.get_top_n(tokenize(query), wiki, 1)[0]
+        tmp["context"] = " ".join(bm25.get_top_n(tokenize(query), wiki, 7))
         total.append(tmp)
         
     df = pd.DataFrame(total)
@@ -265,7 +267,7 @@ def run_mrc(data_args, training_args, model_args, datasets, tokenizer, model):
     #### eval dataset & eval example - will create predictions.json
     if training_args.do_predict:
         predictions = trainer.predict(test_dataset=eval_dataset,
-                                        test_examples=datasets['validation'])
+                                      test_examples=datasets['validation'])
 
         # predictions.json is already saved when we call postprocess_qa_predictions(). so there is no need to further use predictions.
         print("No metric can be presented because there is no correct answer given. Job done!")
@@ -276,6 +278,27 @@ def run_mrc(data_args, training_args, model_args, datasets, tokenizer, model):
 
         trainer.log_metrics("test", metrics)
         trainer.save_metrics("test", metrics)
+
+    def last_preprocessing():
+        mecab = Mecab()
+        kkma = Kkma()
+        hannanum = Hannanum()
+        with open("../outputs/test_dataset/predictions.json", encoding="utf-8") as json_file:
+            json_data = json.load(json_file)
+
+        for k, v in json_data.items():
+            if mecab.pos(v)[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
+                json_data[k] = json_data[k][:-len(mecab.pos(v)[-1][0])]
+            elif v[-1] == "의":
+                # 지울 수 있는 `의` 인지 check
+                if kkma.pos(v)[-1][-1] == "JKG" or mecab.pos(v)[-1][-1] == "NNG" or hannanum.pos(v)[-1][-1] == "J":
+                    json_data[k] = json_data[k][:-1]
+
+        with open("../outputs/test_dataset/proprecessing_predictions.json", "w", encoding="utf-8") as make_file:
+            json.dump(json_data, make_file, indent="\t", ensure_ascii=False)
+
+    print("조사버리기")
+    last_preprocessing()
 
 if __name__ == "__main__":
     main()

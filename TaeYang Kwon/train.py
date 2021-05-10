@@ -3,6 +3,14 @@ import os
 import sys
 from datasets import load_metric, load_from_disk
 
+import random
+import re
+import gc
+import torch
+from tqdm import tqdm
+from datasets import Dataset
+import pickle
+
 from transformers import AutoConfig, AutoModelForQuestionAnswering, AutoTokenizer
 
 from transformers import (
@@ -13,7 +21,7 @@ from transformers import (
     set_seed,
 )
 
-from utils_qa import postprocess_qa_predictions, check_no_error, tokenize
+from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, run_preprocess, random_masking
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
 
@@ -24,7 +32,24 @@ from arguments import (
 
 logger = logging.getLogger(__name__)
 
+
+def set_training_args(training_args):
+    # training_args.seed = 9507
+    # training_args.warmup_steps = 1000
+    training_args.learning_rate = 1e-5
+    training_args.weight_decay = 1e-5
+    training_args.num_train_epochs = 2
+    training_args.eval_steps = 1000
+    training_args.save_steps = 9000
+    training_args.evaluation_strategy="steps"
+    training_args.logging_dir = "./logs"
+    training_args.logging_steps = 500
+    training_args.fp16 = True
+
+
 def main():
+    gc.collect()
+    torch.cuda.empty_cache()
     # 가능한 arguments 들은 ./arguments.py 나 transformer package 안의 src/transformers/training_args.py 에서 확인 가능합니다.
     # --help flag 를 실행시켜서 확인할 수 도 있습니다.
 
@@ -48,18 +73,21 @@ def main():
 
     # Set seed before initializing model.
     set_seed(training_args.seed)
+    set_training_args(training_args)
 
-    # print(data_args.dataset_name)
     datasets = load_from_disk(data_args.dataset_name)
-    print(datasets)
+    datasets = datasets.map(run_preprocess) # 전처리
+    # with open("../input/data/data/datasets.pickle", "rb") as f:
+    #     datasets = pickle.load(f)
+    datasets["train"] = random_masking(datasets) # Question Masking
     
+    print(datasets["train"])
+
     # Load pretrained model and tokenizer
     config = AutoConfig.from_pretrained(
         model_args.config_name
         if model_args.config_name
-        else model_args.model_name_or_path,
-        num_train_epochs=10,
-        weight_decay=1e5
+        else model_args.model_name_or_path
     )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name
@@ -75,8 +103,8 @@ def main():
     )
 
     # train & save sparse embedding retriever if true
-    if data_args.train_retrieval:
-        run_sparse_embedding()
+    # if data_args.train_retrieval:
+    #     run_sparse_embedding()
 
     # train or eval mrc model
     if training_args.do_train or training_args.do_eval:
