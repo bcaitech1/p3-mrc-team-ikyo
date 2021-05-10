@@ -3,4 +3,5 @@ python3 inference.py --output_dir /opt/ml/submission  \
                     --tokenizer_name xlm-roberta-large \
                     --config_name xlm-roberta-large \
                     --retrival_type elastic \
-                    --use_custom_model
+                    --use_custom_model \
+                    --do_predict
