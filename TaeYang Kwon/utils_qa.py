@@ -20,7 +20,11 @@ import collections
 import json
 import logging
 import os
+import re
+from tqdm import tqdm
 from typing import Optional, Tuple
+
+from datasets import Dataset
 
 import numpy as np
 from tqdm.auto import tqdm
@@ -34,28 +38,95 @@ from transformers.trainer_utils import get_last_checkpoint
 logger = logging.getLogger(__name__)
 
 mecab = Mecab()
-def my_tokenize(text):
-    # 길이가 2이상인 단어
-    return list(filter(lambda x: len(x) > 1, mecab.nouns(text)))
+# def my_tokenize(text):
+#     # 길이가 2이상인 단어
+#     return list(filter(lambda x: len(x) > 1, mecab.nouns(text)))
     
-    # 연속된 단어를 하나의 단어로 tokenizing
-    temp_token_lst = mecab.pos(text)
-    token_length = len(mecab.pos(text))
-    return_token_lst = []
-    tmp_token = []
-    for i in range(token_length-1):
-        if temp_token_lst[i][1] == "NNG":
-            tmp_token.append(temp_token_lst[i][0])
-            # 다음 품사가 명사가 아닌 경우 return_token_lst에 추가
-            if temp_token_lst[i+1][1] != "NNG":
-                return_token_lst.append(" ".join(tmp_token))
-                tmp_token = []
-    return return_token_lst + list(filter(lambda x: len(x) > 1, mecab.nouns(text)))
+#     # 연속된 단어를 하나의 단어로 tokenizing
+#     temp_token_lst = mecab.pos(text)
+#     token_length = len(mecab.pos(text))
+#     return_token_lst = []
+#     tmp_token = []
+#     for i in range(token_length-1):
+#         if temp_token_lst[i][1] == "NNG":
+#             tmp_token.append(temp_token_lst[i][0])
+#             # 다음 품사가 명사가 아닌 경우 return_token_lst에 추가
+#             if temp_token_lst[i+1][1] != "NNG":
+#                 return_token_lst.append(" ".join(tmp_token))
+#                 tmp_token = []
+#     return return_token_lst + list(filter(lambda x: len(x) > 1, mecab.nouns(text)))
+
+
+def preprocess(text):
+    text = re.sub(r"\n", " ", text)
+    text = re.sub(r"\\n", " ", text)
+    text = re.sub(r"\s+", " ", text) # ?
+    text = re.sub(r"#", " ", text)
+    text = re.sub(r"[^a-zA-Z0-9가-힣ㄱ-ㅎㅏ-ㅣぁ-ゔァ-ヴー々〆〤一-龥<>()\s\.\?!》《≪≫\'<>〈〉:‘’%,『』「」＜＞・\"-“”∧]", "", text)
+    return text
+
+
+def run_preprocess(data_dict):
+    context = data_dict["context"]
+    start_ids = data_dict["answers"]["answer_start"][0]
+    
+    before = data_dict["context"][:start_ids]
+    after = data_dict["context"][start_ids:]
+    
+    process_before = preprocess(before)
+    process_after = preprocess(after)
+    process_data = process_before + process_after
+    
+    ids_move = len(before) - len(process_before)
+    
+    data_dict["context"] = process_data
+    data_dict["answers"]["answer_start"][0] = start_ids - ids_move
+    
+    return data_dict
+
+
+def random_masking(datasets):
+    # tokenizer 추가
+    # MASK 갯수
+    title_list = []
+    context_list = []
+    question_list = []
+    id_list = []
+    answer_list = []
+    document_id_list = []
+    __index_level_0__list = []
+
+    for i in tqdm(range(datasets["train"].num_rows)):
+        text = datasets["train"][i]["question"]
+        
+        for word, pos in mecab.pos(text):
+            first_word = True
+            if pos in {"NNG", "NNP"} and (first_word or random.random() > 0.8):
+                first_word = False
+                title_list.append(datasets["train"][i]["title"])
+                context_list.append(datasets["train"][i]["context"])
+                question_list.append(re.sub(word, "MASK", text)) # tokenizer.mask_token
+                id_list.append(datasets["train"][i]["id"])
+                answer_list.append(datasets["train"][i]["answers"])
+                document_id_list.append(datasets["train"][i]["document_id"])
+                __index_level_0__list.append(datasets["train"][i]["__index_level_0__"])
+
+    datasets["train"] = Dataset.from_dict({"id" : id_list,
+                                            "title": title_list, 
+                                            "context": context_list, 
+                                            "question": question_list,
+                                            "answers": answer_list,
+                                            "document_id": document_id_list,
+                                            "__index_level_0__": __index_level_0__list,})
+
+    return datasets["train"] # 3000 => 20000
+
     
 
 def tokenize(text):
     # return text.split(" ")
     return mecab.morphs(text)
+    
 
 def set_seed(seed: int):
     """
