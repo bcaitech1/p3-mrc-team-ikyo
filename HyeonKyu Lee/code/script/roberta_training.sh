@@ -6,6 +6,5 @@ python3 train_mrc.py --output_dir /opt/ml/output \
                         --num_train_epoch 5 \
                         --per_device_train_batch_size 16 \
                         --per_device_eval_batch_size 16 \
-                        --dataset_name only_korquad \
-                        --use_custom_model \
-                        --run_name hk_custom_pretrain
+                        --dataset_name concat \
+                        --run_name baseline-roberta

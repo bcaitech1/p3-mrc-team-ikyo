@@ -301,7 +301,7 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
             loss = training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device)
             train_loss.update(loss, len(batch['input_ids']))
             global_steps += 1
-            description = f"{epoch+1}epoch {global_steps: >4d}step | loss: {train_loss.avg: .4f} | best_f1: {prev_f1: .4f} | em : {prev_em: .4f}"
+            description = f"{epoch+1}epoch {global_steps: >5d}step | loss: {train_loss.avg: .4f} | best_f1: {prev_f1: .4f} | em : {prev_em: .4f}"
             pbar.set_description(description)
 
             # validating phase

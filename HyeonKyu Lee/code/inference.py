@@ -175,7 +175,7 @@ def create_and_fill_np_array(start_or_end_logits, dataset, max_len):
 def predict(model, text_data, test_loader, test_dataset, model_args, data_args, training_args, device):
     metric = load_metric("squad")
     # xlm의 input 예외처리
-    if "xlm" in model_args.model_name_or_path:
+    if "xlm" in model_args.tokenizer_name:
         test_dataset.set_format(type="torch", columns=["attention_mask", "input_ids"])
     else:
         test_dataset.set_format(type="torch", columns=["attention_mask", "input_ids", "token_type_ids"])
@@ -220,7 +220,7 @@ def make_submission(scores, training_args):
     mecab = Mecab()
     kkma = Kkma()
     hannanum = Hannanum()
-    with open("/opt/ml/lastcode/submission/nbest_predictions.json", "r") as f:
+    with open(os.path.join(training_args.output_dir, "nbest_predictions.json"), "r") as f:
         nbest = json.load(f)
 
     prediction = dict()
