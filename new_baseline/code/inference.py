@@ -220,7 +220,7 @@ def make_submission(scores, training_args):
     mecab = Mecab()
     kkma = Kkma()
     hannanum = Hannanum()
-    with open("/opt/ml/lastcode/submission/nbest_predictions.json", "r") as f:
+    with open(os.path.join(training_args.output_dir, "nbest_predictions.json"), "r") as f:
         nbest = json.load(f)
 
     prediction = dict()
@@ -257,7 +257,7 @@ def make_submission(scores, training_args):
         final_score.append(nbest[mrc_id_step][0]["probability"] + scores[score_step][int(step)]/sum_score)
     
     # 전처리한 최종결과 final_prediction으로 저장
-    with open(training_args.output_dir+f"/final_predictions.json", 'w', encoding='utf-8') as make_file:
+    with open(os.path.join(training_args.output_dir, "final_predictions.json"), 'w', encoding='utf-8') as make_file:
         json.dump(prediction, make_file, indent="\t", ensure_ascii=False)
     print(prediction)
 
