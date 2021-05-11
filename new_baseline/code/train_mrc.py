@@ -129,7 +129,7 @@ def get_data(data_args, training_args, tokenizer) :
     val_column_names = val_text.column_names
     data_collator = (DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if training_args.fp16 else None))
 
-    data_processor = DataProcessor(tokenizer)
+    data_processor = DataProcessor(tokenizer, data_args.max_seq_length)
     train_dataset = data_processor.train_tokenizer(train_text, train_column_names)
     val_dataset = data_processor.val_tokenzier(val_text, val_column_names)
 
