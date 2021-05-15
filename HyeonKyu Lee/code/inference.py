@@ -27,6 +27,7 @@ from transformers import (
     set_seed,
 )
 
+from Query_Attention_Model import QuestionAttentionModel
 from elasticsearch_retrieval import *
 from data_processing import DataProcessor
 from utils_qa import postprocess_qa_predictions, check_no_error, tokenize
