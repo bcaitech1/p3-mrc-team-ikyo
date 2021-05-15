@@ -1,4 +1,5 @@
 import os
+import gc
 import sys
 import time
 import pickle
@@ -24,7 +25,7 @@ from transformers import (
 )
 
 from my_model import Mymodel
-from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter
+from utils_qa import random_masking, postprocess_qa_predictions, AverageMeter, last_processing
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
 from arguments import ModelArguments, DataTrainingArguments
@@ -123,19 +124,26 @@ def get_data(data_args, training_args, tokenizer) :
     else :
         raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad]")
 
+    
+    # text_data["train"] = random_masking(text_data)
+    print(text_data)
     train_text = text_data['train']
     val_text = text_data['validation']
     train_column_names = train_text.column_names
     val_column_names = val_text.column_names
-    data_collator = (DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if training_args.fp16 else None))
 
-    data_processor = DataProcessor(tokenizer, data_args.max_seq_length, data_args.doc_stride)
+    print("=" * 50)
+    data_collator = (DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8 if training_args.fp16 else None))
+    print("=" * 50)
+    data_processor = DataProcessor(tokenizer)
+    print("=" * 50)
     train_dataset = data_processor.train_tokenizer(train_text, train_column_names)
     val_dataset = data_processor.val_tokenzier(val_text, val_column_names)
+    print("=" * 50)
 
     train_iter = DataLoader(train_dataset, collate_fn = data_collator, batch_size=training_args.per_device_train_batch_size)
     val_iter = DataLoader(val_dataset, collate_fn = data_collator, batch_size=training_args.per_device_eval_batch_size)
-
+    print("=" * 50)
     return text_data, train_iter, val_iter, train_dataset, val_dataset
 
 
@@ -150,7 +158,7 @@ def post_processing_function(examples, features, predictions, text_data, data_ar
     )
 
     formatted_predictions = [
-        {"id": k, "prediction_text": v} for k, v in predictions.items()
+        {"id": k, "prediction_text": last_processing(v)} for k, v in predictions.items()
     ]
     if training_args.do_predict:
         return formatted_predictions
@@ -225,11 +233,11 @@ def training_per_step(model, optimizer, scaler, batch, model_args, data_args, tr
     '''매 step마다 학습을 하는 함수'''
     model.train()
     with autocast():
-        mask_props = 0.8
-        mask_p = random.random()
-        if mask_p < mask_props:
-            # 확률 안에 들면 mask 적용
-            batch = custom_to_mask(batch, tokenizer)
+        # mask_props = 0.8
+        # mask_p = random.random()
+        # if mask_p < mask_props:
+        #     # 확률 안에 들면 mask 적용
+        #     batch = custom_to_mask(batch, tokenizer)
 
         batch = batch.to(device)
         outputs = model(**batch)
@@ -341,8 +349,14 @@ def main():
     device=torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     tokenizer, model_config, model, optimizer, scaler, scheduler  = get_model(model_args, training_args)
+    
+    print("=" * 30)
+
     text_data, train_loader, val_loader, train_dataset, val_dataset = get_data(data_args, training_args, tokenizer)
+
     model.cuda()
+
+    print("=" * 30)
 
     if not os.path.isdir(training_args.output_dir) :
         os.mkdir(training_args.output_dir)
@@ -358,4 +372,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    gc.collect()
+    torch.cuda.empty_cache()
+    # main()

@@ -20,11 +20,13 @@ import collections
 import json
 import logging
 import os
+import re
 from typing import Optional, Tuple
+from datasets import Dataset
 
 import numpy as np
 from tqdm.auto import tqdm
-from konlpy.tag import Mecab
+from konlpy.tag import Mecab, Kkma, Hannanum
 
 import torch
 import random
@@ -34,6 +36,8 @@ from transformers.trainer_utils import get_last_checkpoint
 logger = logging.getLogger(__name__)
 
 mecab = Mecab()
+kkma = Kkma()
+hannanum = Hannanum()
 def tokenize(text):
     # return text.split(" ")
     return mecab.morphs(text)
@@ -48,12 +52,78 @@ def set_seed(seed: int):
     """
     random.seed(seed)
     np.random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     if is_torch_available():
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)  # if use multi-GPU
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
+
+
+def random_masking(datasets):
+    """
+    train data masking
+
+    Args:
+        datasets ([type]): [description]
+
+    Returns:
+        datasets
+    """
+    context_list = []
+    question_list = []
+    id_list = []
+    answer_list = []
+    
+    # train 갯수만큼 iteration
+    for i in tqdm(range(datasets["train"].num_rows)):
+        text = datasets["train"][i]["question"]
+        
+        # 단어 기준 Masking
+        for word, pos in mecab.pos(text):
+            first_word = True
+            # 첫번째 단어는 무조건 Masking(질문 중 가장 중요한 의미를 가지고 있다고 생각)
+            # 두번째 단어부터는 20% 확률로 Masking
+            # 하나의 단어만 Masking
+            if pos in {"NNG", "NNP"} and (first_word or random.random() > 0.8):
+                first_word = False
+                context_list.append(datasets["train"][i]["context"])
+                question_list.append(re.sub(word, "MASK", text)) # tokenizer.mask_token
+                id_list.append(datasets["train"][i]["id"])
+                answer_list.append(datasets["train"][i]["answers"])
+
+    # list를 Dataset 형태로 변환
+    datasets["train"] = Dataset.from_dict({"id" : id_list,
+                                           "context": context_list, 
+                                           "question": question_list,
+                                           "answers": answer_list})
+
+    return datasets["train"] # 3000 => 20000
+
+
+def last_processing(text):
+    """
+    조사버리기
+
+    Args:
+        text (str): 조사가 있는 text
+
+    Returns:
+        [str]: 필요 없는 조사 제거
+    """
+
+    pos_tag = mecab.pos(text)
+
+    # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
+    if text[-1] == "의":
+        min_len = min(len(kkma.pos(text)[-1][0]), len(mecab.pos(text)[-1][0]), len(hannanum.pos(text)[-1][0]))
+        if min_len == 1:
+            text = text[:-1]
+    elif pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
+        text = text[:-len(pos_tag[-1][0])]
+
+    return text
 
 
 def postprocess_qa_predictions(
@@ -129,7 +199,7 @@ def postprocess_qa_predictions(
     )
 
     # Let's loop over all the examples!
-    for example_index, example in enumerate(tqdm(examples)):
+    for example_index, example in enumerate(examples):
         # Those are the indices of the features associated to the current example.
         feature_indices = features_per_example[example_index]
 
@@ -353,3 +423,18 @@ def check_no_error(training_args, data_args, tokenizer, datasets):
     if "validation" not in datasets:
         raise ValueError("--do_eval requires a validation dataset")
     return last_checkpoint, max_seq_length
+
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
