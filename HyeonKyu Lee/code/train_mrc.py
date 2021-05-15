@@ -25,7 +25,7 @@ from transformers import (
 
 from my_model import Mymodel
 from Query_Attention_Model import QuestionAttentionModel
-from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter
+from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter, last_processing
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
 from arguments import ModelArguments, DataTrainingArguments
@@ -151,7 +151,7 @@ def post_processing_function(examples, features, predictions, text_data, data_ar
     )
 
     formatted_predictions = [
-        {"id": k, "prediction_text": v} for k, v in predictions.items()
+        {"id": k, "prediction_text": last_processing(v)} for k, v in predictions.items()
     ]
     if training_args.do_predict:
         return formatted_predictions
