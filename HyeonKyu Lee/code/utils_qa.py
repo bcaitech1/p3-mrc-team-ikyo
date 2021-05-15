@@ -369,3 +369,24 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+def last_processing(text):
+    """
+    조사 버리기
+    Args:
+        text (str): 조사가 있는 text
+    Returns:
+        [str]: 필요 없는 조사 제거
+    """
+
+    pos_tag = mecab.pos(text)
+
+    # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
+    if text[-1] == "의":
+        min_len = min(len(kkma.pos(text)[-1][0]), len(mecab.pos(text)[-1][0]), len(hannanum.pos(text)[-1][0]))
+        if min_len == 1:
+            text = text[:-1]
+    elif pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
+        text = text[:-len(pos_tag[-1][0])]
+
+    return text
