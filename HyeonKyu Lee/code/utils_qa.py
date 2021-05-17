@@ -21,19 +21,20 @@ import json
 import logging
 import os
 from typing import Optional, Tuple
+import math
 
 import numpy as np
 from tqdm.auto import tqdm
-from konlpy.tag import Mecab
+from konlpy.tag import Mecab, Kkma, Hannanum
 
 import torch
+from torch.optim.lr_scheduler import _LRScheduler
 import random
 from transformers import is_torch_available, PreTrainedTokenizerFast
 from transformers.trainer_utils import get_last_checkpoint
 
 logger = logging.getLogger(__name__)
 
-mecab = Mecab()
 def tokenize(text):
     # return text.split(" ")
     return mecab.morphs(text)
@@ -355,6 +356,7 @@ def check_no_error(training_args, data_args, tokenizer, datasets):
         raise ValueError("--do_eval requires a validation dataset")
     return last_checkpoint, max_seq_length
 
+
 class AverageMeter(object):
     """Computes and stores the average and current value"""
     def __init__(self):
@@ -370,6 +372,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+
 def last_processing(text):
     """
     조사 버리기
@@ -378,6 +381,9 @@ def last_processing(text):
     Returns:
         [str]: 필요 없는 조사 제거
     """
+    mecab = Mecab()
+    kkma = Kkma()
+    hannanum = Hannanum()
 
     pos_tag = mecab.pos(text)
 
@@ -388,5 +394,4 @@ def last_processing(text):
             text = text[:-1]
     elif pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
         text = text[:-len(pos_tag[-1][0])]
-
     return text

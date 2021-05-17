@@ -71,7 +71,7 @@ def get_model(model_args, training_args) :
         use_fast=True,
     )
     if model_args.use_pretrained_koquard_model:
-        model = torch.load(model_args.model_name_or_path)
+        model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
 
     elif model_args.use_custom_model:
         model = QAConvModel(model_args.config_name, model_config)
@@ -84,7 +84,7 @@ def get_model(model_args, training_args) :
         )
     optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
     scaler = GradScaler()
-    scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=1000, num_training_steps=12820, num_cycles=2)
+    scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=2000, num_training_steps=60000, num_cycles=3)
 
     return tokenizer, model_config, model, optimizer, scaler, scheduler 
 
@@ -99,32 +99,33 @@ def get_pickle(pickle_path):
 
 def get_data(data_args, training_args, tokenizer) :
     '''train과 validation의 dataloader와 dataset를 반환하는 함수'''
-    if data_args.dataset_name == 'basic' :
-        if os.path.isdir("/opt/ml/input/data/train_dataset") :
-            text_data = load_from_disk("/opt/ml/input/data/train_dataset")
-        else :
-            raise Exception ("Set the data path to '/opt/ml/input/data/.'")
-    elif data_args.dataset_name == 'preprocessed' :
-        if os.path.isfile("/opt/ml/input/data/preprocess_train.pkl") :
-            text_data = get_pickle("/opt/ml/input/data/preprocess_train.pkl")
-        else :
-            text_data = make_custom_dataset("/opt/ml/input/data/preprocess_train.pkl")
-    elif data_args.dataset_name == 'concat' :
-        if os.path.isfile("/opt/ml/input/data/train_concat5.pkl") :
-            text_data = get_pickle("/opt/ml/input/data/train_concat5.pkl")
-        else :
-            text_data = make_custom_dataset("/opt/ml/input/data/train_concat5.pkl")
-    elif data_args.dataset_name == 'korquad' :
-        if os.path.isfile("/opt/ml/input/data/add_squad_kor_v1_2.pkl") :
-            text_data = get_pickle("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
-        else :
-            text_data = make_custom_dataset("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
-    elif data_args.dataset_name == "only_korquad":
-        text_data = load_dataset("squad_kor_v1")
+    # if data_args.dataset_name == 'basic' :
+    #     if os.path.isdir("/opt/ml/input/data/train_dataset") :
+    #         text_data = load_from_disk("/opt/ml/input/data/train_dataset")
+    #     else :
+    #         raise Exception ("Set the data path to '/opt/ml/input/data/.'")
+    # elif data_args.dataset_name == 'preprocessed' :
+    #     if os.path.isfile("/opt/ml/input/data/preprocess_train.pkl") :
+    #         text_data = get_pickle("/opt/ml/input/data/preprocess_train.pkl")
+    #     else :
+    #         text_data = make_custom_dataset("/opt/ml/input/data/preprocess_train.pkl")
+    # elif data_args.dataset_name == 'concat' :
+    #     if os.path.isfile("/opt/ml/input/data/train_concat5.pkl") :
+    #         text_data = get_pickle("/opt/ml/input/data/train_concat5.pkl")
+    #     else :
+    #         text_data = make_custom_dataset("/opt/ml/input/data/train_concat5.pkl")
+    # elif data_args.dataset_name == 'korquad' :
+    #     if os.path.isfile("/opt/ml/input/data/add_squad_kor_v1_2.pkl") :
+    #         text_data = get_pickle("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
+    #     else :
+    #         text_data = make_custom_dataset("/opt/ml/input/data/add_squad_kor_v1_2.pkl")
+    # elif data_args.dataset_name == "only_korquad":
+    #     text_data = load_dataset("squad_kor_v1")
 
-    else :
-        raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad]")
+    # else :
+    #     raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad]")
 
+    text_data = get_pickle('/opt/ml/outer_datas/ai_hub_dataset.pkl')
     train_text = text_data['train']
     val_text = text_data['validation']
     train_column_names = train_text.column_names
@@ -223,6 +224,10 @@ def cal_loss(start_positions, end_positions, start_logits, end_logits):
     return total_loss
 
 
+def cal_query_loss(question_type, query_logits) :
+    return nn.CrossEntropyLoss()(query_logits, question_type)
+
+
 def training_per_step(model, optimizer, scaler, batch, model_args, data_args, training_args, tokenizer, device):
     '''매 step마다 학습을 하는 함수'''
     model.train()
@@ -239,6 +244,7 @@ def training_per_step(model, optimizer, scaler, batch, model_args, data_args, tr
         # output안에 loss가 들어있는 형태
         if model_args.use_custom_model:
             loss = cal_loss(batch["start_positions"], batch["end_positions"], outputs["start_logits"], outputs["end_logits"])
+            loss += cal_query_loss(batch['question_type'], outputs['query_logits'])/2
         else:
             loss = outputs.loss
         scaler.scale(loss).backward()

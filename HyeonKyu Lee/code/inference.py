@@ -112,7 +112,7 @@ def get_data(model_args, training_args, tokenizer, text_data_path = "/opt/ml/inp
     
     # 사용하고 싶은 retrieval 선택하여 사용 (4개중 1개), 종헌님, 태양님꺼 추가
     if model_args.retrival_type == "elastic":
-        concat_num = 9
+        concat_num = 30
         text_data, scores = run_concat_elastic_retrival(text_data, concat_num)
 
     column_names = text_data["validation"].column_names
