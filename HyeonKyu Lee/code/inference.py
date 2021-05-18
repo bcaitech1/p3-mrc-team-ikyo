@@ -121,7 +121,7 @@ def get_data(model_args, training_args, tokenizer, text_data_path = "/opt/ml/inp
     #text_data = get_pickle("/opt/ml/input/data/question_type_test.pkl")
     # 사용하고 싶은 retrieval 선택하여 사용 (4개중 1개), 종헌님, 태양님꺼 추가
     if model_args.retrival_type == "elastic":
-        concat_num = 35
+        concat_num = 5
         text_data, scores = run_concat_elastic_retrival(text_data, concat_num)
 
     column_names = text_data["validation"].column_names
@@ -243,15 +243,12 @@ def make_submission(scores, training_args):
 
         pos_tag = mecab.pos(final_predictions)
         # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
-        
         if final_predictions[-1] == "의":
             min_len = min(len(kkma.pos(final_predictions)[-1][0]), len(mecab.pos(final_predictions)[-1][0]), len(hannanum.pos(final_predictions)[-1][0]))
             if min_len == 1:
                 final_predictions = final_predictions[:-1]
         elif pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
             final_predictions = final_predictions[:-len(pos_tag[-1][0])]
-
-                final_predictions = final_predictions[:-1]
 
         prediction_dict[str(mrc_id)] = final_predictions
     
