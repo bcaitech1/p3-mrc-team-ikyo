@@ -242,12 +242,15 @@ def make_submission(scores, training_args):
         final_predictions = prediction_json[mrc_id]
 
         pos_tag = mecab.pos(final_predictions)
-                # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
-        if pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
+        # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
+        
+        if final_predictions[-1] == "의":
+            min_len = min(len(kkma.pos(final_predictions)[-1][0]), len(mecab.pos(final_predictions)[-1][0]), len(hannanum.pos(final_predictions)[-1][0]))
+            if min_len == 1:
+                final_predictions = final_predictions[:-1]
+        elif pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
             final_predictions = final_predictions[:-len(pos_tag[-1][0])]
 
-        elif final_predictions[-1] == "의":
-            if kkma.pos(final_predictions)[-1][-1] == "JKG" or mecab.pos(final_predictions)[-1][-1] == "NNG" or hannanum.pos(final_predictions)[-1][-1] == "J" :
                 final_predictions = final_predictions[:-1]
 
         prediction_dict[str(mrc_id)] = final_predictions
