@@ -77,7 +77,7 @@ def get_model(model_args, training_args) :
         model.load_state_dict(pretrained_model_state)
 
     elif model_args.use_custom_model:
-        model = QAConvModel(model_args.config_name, model_config)
+        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
 
     else:
         model = AutoModelForQuestionAnswering.from_pretrained(

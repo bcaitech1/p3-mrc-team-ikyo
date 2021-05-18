@@ -8,4 +8,4 @@ python3 pretrain_QAModel.py --output_dir /opt/ml/output \
                         --per_device_eval_batch_size 16 \
                         --dataset_name ai_hub_dataset \
                         --use_custom_model \
-                        --run_name hk_QAConv_Model_pretraining
+                        --run_name hk_QAConv_Model_pretraining_deepset

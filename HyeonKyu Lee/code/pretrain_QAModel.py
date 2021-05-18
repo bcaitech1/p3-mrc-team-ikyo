@@ -73,7 +73,7 @@ def get_model(model_args, training_args) :
         model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
 
     elif model_args.use_custom_model:
-        model = QAConvModel(model_args.config_name, model_config)
+        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
 
     else:
         model = AutoModelForQuestionAnswering.from_pretrained(
