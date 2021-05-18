@@ -9,6 +9,7 @@ import random
 import numpy as np
 import pandas as pd
 import os
+import pickle
 
 from tqdm import tqdm
 from datasets import load_metric, load_from_disk, Sequence, Value, Features, Dataset, DatasetDict
@@ -57,6 +58,14 @@ def seed_everything(seed):
     torch.backends.cudnn.benchmark = True
     set_seed(seed)
 
+def get_pickle(pickle_path):
+    '''Custom Dataset을 Load하기 위한 함수'''
+    f = open(pickle_path, "rb")
+    dataset = pickle.load(f)
+    f.close()
+
+    return dataset
+
 # 모델, tokenizer, config 가져오기
 def get_model(model_args, training_args):
     # MRC 모델을 저장할 때 backborn 모델이름으로 저장해서 사용했기 때문
@@ -89,7 +98,7 @@ def run_concat_elastic_retrival(text_data, concat_num):
 
         tmp = {
             "question" : question_text,
-            "id" : text_data["validation"]["id"][step] + "_0",
+            "id" : text_data["validation"]["id"][step],
             "context" : concat_context
         }
 
@@ -107,11 +116,12 @@ def run_concat_elastic_retrival(text_data, concat_num):
 
 
 def get_data(model_args, training_args, tokenizer, text_data_path = "/opt/ml/input/data/data/test_dataset"):
-    text_data = load_from_disk(text_data_path)
     
+    text_data = load_from_disk(text_data_path)
+    #text_data = get_pickle("/opt/ml/input/data/question_type_test.pkl")
     # 사용하고 싶은 retrieval 선택하여 사용 (4개중 1개), 종헌님, 태양님꺼 추가
     if model_args.retrival_type == "elastic":
-        concat_num = 9
+        concat_num = 5
         text_data, scores = run_concat_elastic_retrival(text_data, concat_num)
 
     column_names = text_data["validation"].column_names
@@ -220,46 +230,32 @@ def make_submission(scores, training_args):
     mecab = Mecab()
     kkma = Kkma()
     hannanum = Hannanum()
-    with open(os.path.join(training_args.output_dir, "nbest_predictions.json"), "r") as f:
-        nbest = json.load(f)
+    with open(os.path.join(training_args.output_dir, "predictions.json"), "r") as f:
+        prediction_json = json.load(f)
 
-    prediction = dict()
-    prev_mrc_id = None
-    # 역시 score는 무시해주세요
-    final_score = []
-    score_step = 0
+    prediction_dict = dict()
     # 마지막에 주로 붙었던 조사들로 이루어진 set
     #last_word = {"은", "는", "이" ,"가", "을" ,"를", "의", "에"}
 
-    for mrc_id_step in nbest.keys():
-        # score와 관련된 split
-        mrc_id, step = mrc_id_step.split("_")
-        if prev_mrc_id != mrc_id:
-            if prev_mrc_id is not None:
-                large_step = np.argmax(final_score)
-                final_predictions = nbest[prev_mrc_id+f"_{large_step}"][0]["text"]
-                pos_tag = mecab.pos(final_predictions)
+    for mrc_id in prediction_json.keys():
+                   
+        final_predictions = prediction_json[mrc_id]
+
+        pos_tag = mecab.pos(final_predictions)
                 # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
-                if pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
-                    final_predictions = final_predictions[:-len(pos_tag[-1][0])]
+        if pos_tag[-1][-1] in {"JX", "JKB", "JKO", "JKS", "ETM", "VCP", "JC"}:
+            final_predictions = final_predictions[:-len(pos_tag[-1][0])]
 
-                elif final_predictions[-1] == "의":
-                    if kkma.pos(final_predictions)[-1][-1] == "JKG" or mecab.pos(final_predictions)[-1][-1] == "NNG" or hannanum.pos(final_predictions)[-1][-1] == "J" :
-                        final_predictions = final_predictions[:-1]
+        elif final_predictions[-1] == "의":
+            if kkma.pos(final_predictions)[-1][-1] == "JKG" or mecab.pos(final_predictions)[-1][-1] == "NNG" or hannanum.pos(final_predictions)[-1][-1] == "J" :
+                final_predictions = final_predictions[:-1]
 
-                prediction[str(prev_mrc_id)] = final_predictions
-                score_step += 1
-                final_score = []
-            sum_score = sum(scores[score_step])
-            prev_mrc_id = mrc_id
-        
-        # 여기다가 (1 - m) (m) 안쓰는것...
-        final_score.append(nbest[mrc_id_step][0]["probability"] + scores[score_step][int(step)]/sum_score)
+        prediction_dict[str(mrc_id)] = final_predictions
     
     # 전처리한 최종결과 final_prediction으로 저장
     with open(os.path.join(training_args.output_dir, "final_predictions.json"), 'w', encoding='utf-8') as make_file:
-        json.dump(prediction, make_file, indent="\t", ensure_ascii=False)
-    print(prediction)
+        json.dump(prediction_dict, make_file, indent="\t", ensure_ascii=False)
+    print(prediction_dict)
 
 
 def main():
