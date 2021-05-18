@@ -17,7 +17,7 @@ class QAConvModel(nn.Module):
         self.conv1d_layer1 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=1)
         self.conv1d_layer3 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=3, padding=1)
         self.conv1d_layer5 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=5, padding=2)
-        self.drop_out = nn.Dropout(0.3)
+        self.drop_out = nn.Dropout(0.7)
         self.classify_layer = nn.Linear(model_config.hidden_size*3, 2, bias=True)
 
     def forward(self, input_ids=None, attention_mask=None, token_type_ids=None, position_ids=None, head_mask=None, inputs_embeds=None, start_positions=None, end_positions=None, output_attentions=None, output_hidden_states=None, return_dict=None, question_type=None):

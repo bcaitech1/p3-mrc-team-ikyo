@@ -1,12 +1,11 @@
 python3 pretrain_QAModel.py --output_dir /opt/ml/output \
-                        --model_name_or_path xlm-roberta-large \
-                        --tokenizer_name xlm-roberta-large \
-                        --config_name xlm-roberta-large \
+                        --model_name_or_path deepset/xlm-roberta-large-squad2 \
+                        --tokenizer_name deepset/xlm-roberta-large-squad2 \
+                        --config_name deepset/xlm-roberta-large-squad2 \
                         --learning_rate 0.000005 \
                         --num_train_epoch 2 \
                         --per_device_train_batch_size 16 \
                         --per_device_eval_batch_size 16 \
                         --dataset_name ai_hub_dataset \
                         --use_custom_model \
-                        --run_name hk_QAConv_Model_pretraining \
-                        --use_pretrained_koquard_model
+                        --run_name hk_QAConv_Model_pretraining

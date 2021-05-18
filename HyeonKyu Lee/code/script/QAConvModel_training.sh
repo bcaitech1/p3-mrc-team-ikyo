@@ -1,11 +1,12 @@
-python3 train_mrc.py --output_dir /opt/ml/output \
-                        --model_name_or_path xlm-roberta-large \
-                        --tokenizer_name xlm-roberta-large \
-                        --config_name xlm-roberta-large \
+python3 train_QAModel.py --output_dir /opt/ml/output \
+                        --model_name_or_path hk_QAConv_Model_pretraining \
+                        --tokenizer_name deepset/xlm-roberta-large-squad2 \
+                        --config_name deepset/xlm-roberta-large-squad2 \
                         --learning_rate 0.000005 \
                         --num_train_epoch 5 \
                         --per_device_train_batch_size 16 \
                         --per_device_eval_batch_size 16 \
                         --dataset_name concat \
                         --use_custom_model \
-                        --run_name QAConvModel_dr03
+                        --use_pretrained_koquard_model \
+                        --run_name hk_QAConvModel_afterpt_dr07_withQT

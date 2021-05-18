@@ -4,6 +4,7 @@ import time
 import pickle
 import random
 import logging
+from copy import deepcopy
 
 import wandb
 import torch
@@ -24,7 +25,6 @@ from transformers import (
 )
 
 from my_model import Mymodel
-from Query_Attention_Model import QuestionAttentionModel
 from QA_Conv_Model import QAConvModel
 from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter, last_processing
 from trainer_qa import QuestionAnsweringTrainer
@@ -72,6 +72,9 @@ def get_model(model_args, training_args) :
     )
     if model_args.use_pretrained_koquard_model:
         model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
+        pretrained_model_state = deepcopy(model.state_dict())
+        model = QAConvModel(model_args.config_name, model_config)
+        model.load_state_dict(pretrained_model_state)
 
     elif model_args.use_custom_model:
         model = QAConvModel(model_args.config_name, model_config)
@@ -84,7 +87,7 @@ def get_model(model_args, training_args) :
         )
     optimizer = AdamW(model.parameters(), lr=training_args.learning_rate)
     scaler = GradScaler()
-    scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=2000, num_training_steps=60000, num_cycles=3)
+    scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=1000, num_training_steps=12820, num_cycles=2)
 
     return tokenizer, model_config, model, optimizer, scaler, scheduler 
 
@@ -125,7 +128,7 @@ def get_data(data_args, training_args, tokenizer) :
     # else :
     #     raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad]")
 
-    text_data = get_pickle('/opt/ml/outer_datas/ai_hub_dataset.pkl')
+    text_data = get_pickle("/opt/ml/outer_datas/question_type2.pkl")
     train_text = text_data['train']
     val_text = text_data['validation']
     train_column_names = train_text.column_names
@@ -153,7 +156,7 @@ def post_processing_function(examples, features, predictions, text_data, data_ar
     )
 
     formatted_predictions = [
-        {"id": k, "prediction_text": v} for k, v in predictions.items()
+        {"id": k, "prediction_text": last_processing(v)} for k, v in predictions.items()
     ]
     if training_args.do_predict:
         return formatted_predictions
@@ -244,7 +247,7 @@ def training_per_step(model, optimizer, scaler, batch, model_args, data_args, tr
         # output안에 loss가 들어있는 형태
         if model_args.use_custom_model:
             loss = cal_loss(batch["start_positions"], batch["end_positions"], outputs["start_logits"], outputs["end_logits"])
-            loss += cal_query_loss(batch['question_type'], outputs['query_logits'])/2
+            loss += cal_query_loss(batch['question_type'], outputs['query_logits'])/5
         else:
             loss = outputs.loss
         scaler.scale(loss).backward()
