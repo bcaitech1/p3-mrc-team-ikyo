@@ -18,7 +18,7 @@ class QAConvModel(nn.Module):
         self.conv1d_layer1 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=1)
         self.conv1d_layer3 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=3, padding=1)
         self.conv1d_layer5 = nn.Conv1d(model_config.hidden_size, 1024, kernel_size=5, padding=2)
-        self.drop_out = nn.Dropout(0.3)
+        self.drop_out = nn.Dropout(0.7)
         self.classify_layer = nn.Linear(1024*3, 2, bias=True)
 
 

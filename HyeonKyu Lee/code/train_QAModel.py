@@ -73,7 +73,7 @@ def get_model(model_args, training_args) :
     if model_args.use_pretrained_koquard_model:
         model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
         pretrained_model_state = deepcopy(model.state_dict())
-        model = QAConvModel(model_args.config_name, model_config)
+        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
         model.load_state_dict(pretrained_model_state)
 
     elif model_args.use_custom_model:
