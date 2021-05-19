@@ -388,7 +388,9 @@ def last_processing(text):
     pos_tag = mecab.pos(text)
 
     # last word(조사)에 있는 단어고 형태소 분석 결과가 j일경우 삭제
-    if text[-1] == "의":
+    if not pos_tag :
+        pass
+    elif text[-1] == "의":
         min_len = min(len(kkma.pos(text)[-1][0]), len(mecab.pos(text)[-1][0]), len(hannanum.pos(text)[-1][0]))
         if min_len == 1:
             text = text[:-1]

@@ -235,7 +235,7 @@ def make_submission(scores, training_args):
 
     prediction_dict = dict()
     # 마지막에 주로 붙었던 조사들로 이루어진 set
-    #last_word = {"은", "는", "이" ,"가", "을" ,"를", "의", "에"}
+    # last_word = {"은", "는", "이" ,"가", "을" ,"를", "의", "에"}
 
     for mrc_id in prediction_json.keys():
                    

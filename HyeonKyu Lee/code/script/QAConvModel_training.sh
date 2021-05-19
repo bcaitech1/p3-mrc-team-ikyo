@@ -6,7 +6,7 @@ python3 train_QAModel.py --output_dir /opt/ml/output \
                         --num_train_epoch 5 \
                         --per_device_train_batch_size 16 \
                         --per_device_eval_batch_size 16 \
-                        --dataset_name concat \
+                        --dataset_name concat_with_QA \
                         --use_custom_model \
                         --use_pretrained_koquard_model \
-                        --run_name hk_QAConvModel_fixed_deepset_dr07_withQT
+                        --run_name hk_QAConvModel_fixed_deepset_dr07_withQT_NoTruncVV_T10

@@ -3,6 +3,7 @@ import numpy as np
 from torch import nn, optim
 from torch.nn import functional as F
 from transformers import AutoTokenizer, AutoModel
+import math
 
 class QAConvModel(nn.Module):
     def __init__(self, model_name, model_config, tokenizer_name):
@@ -53,15 +54,19 @@ class QAConvModel(nn.Module):
         if not token_type_ids :
             token_type_ids = self.make_token_type_ids(input_ids)
 
-        embedded_query = sequence_output * (token_type_ids.unsqueeze(dim=-1)==0) # 전체 Text 중 query에 해당하는 Embedded Vector만 남김.
+        embedded_query = sequence_output * (token_type_ids==0) # 전체 Text 중 query에 해당하는 Embedded Vector만 남김.
         embedded_query = self.query_layer(embedded_query) # Dense Layer를 통과 시킴. (B * max_seq_length * hidden_size)
         embedded_query = torch.mean(embedded_query, 1, keepdim=True) # Query에 해당하는 Token Embedding을 평균냄. (B * 1 * hidden_size)
         query_logits = self.query_calssify_layer(embedded_query.squeeze(1)) # Query의 종류를 예측하는 Branch (B * 6)
 
-        embedded_key = self.key_layer(sequence_output) # (B * max_seq_length * hidden_size)
+        # embedded_value = sequence_output * (token_type_ids.unsqueeze(dim=-1)==1) # 전체 Text 중 context에 해당하는 Embedded Vector만 남김.
+        embedded_key = sequence_output * (token_type_ids==1) # 전체 Text 중 context에 해당하는 Embedded Vector만 남김.
+        embedded_key = self.key_layer(embedded_key) # (B * max_seq_length * hidden_size)
         embedded_value = self.value_layer(sequence_output) # (B * max_seq_length * hidden_size)
-        attention_rate = torch.matmul(embedded_key, torch.transpose(embedded_query, 1, 2)) # Context의 Value Vector와 Quetion의 Query Vector를 사용
-        attention_rate = F.softmax(attention_rate, 1) # Question과 Context의 Attention Rate를 구함. (B * max_seq_legth * 1)
+        attention_rate = torch.matmul(embedded_key, torch.transpose(embedded_query, 1, 2)) # Context의 Value Vector와 Quetion의 Query Vector를 사용 (B * max_seq_legth * 1)
+        attention_rate = attention_rate / math.sqrt(embedded_key.shape[-1]) # 표준편차로 나눠줌. (B * max_seq_legth * 1)
+        # attention_rate = F.softmax(attention_rate, 1) # softmax를 통과시켜서 확률값으로  변경함. (B * max_seq_legth * 1)
+        attention_rate = self.softmax_with_temperature(attention_rate, T=10) # Question과 Context의 Attention Rate를 구함. (B * max_seq_legth * 1)
         embedded_value = embedded_value * attention_rate # Attention Rate를 활용해서 Output 값을 변경함. (B * max_seq_legth * hidden_size)
 
         conv_input = embedded_value.transpose(1, 2) # Convolution 연산을 위해 Transpose (B * hidden_size * max_seq_legth)
@@ -87,4 +92,16 @@ class QAConvModel(nn.Module):
             sep_idx = np.where(input_id.cpu().numpy() == self.sep_token_id)
             token_type_id = [0]*sep_idx[0][0] + [1]*(len(input_id)-sep_idx[0][0])
             token_type_ids.append(token_type_id)
-        return torch.tensor(token_type_ids).cuda()
+        return torch.tensor(token_type_ids).unsqueeze(dim=-1).cuda()
+
+    # (B * max_seq_legth * 1)
+    def softmax_with_temperature(self, tensor, T=10) : 
+        tensor = tensor.squeeze() # (B * max_seq_length)
+        tensor = tensor / T
+        for idx, arr in enumerate(tensor) :
+            max_val = torch.max(arr)
+            exp_arr = torch.exp(arr - max_val)
+            sum_exp_arr = exp_arr.sum()
+            new_arr = exp_arr / sum_exp_arr
+            tensor[idx] = new_arr
+        return tensor.unsqueeze(dim=-1)
