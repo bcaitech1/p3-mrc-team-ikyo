@@ -14,7 +14,7 @@ def elastic_setting():
     es = Elasticsearch([config])
 
     # 인덱스 이름
-    index_name = "split-wiki-index" # ['split-wiki-index', 'nori-index']
+    index_name = "split-wiki-800-index" # ['split-wiki-index', 'nori-index', 'split-wiki-800-index']
     
     return es, index_name
 

@@ -25,7 +25,7 @@ from transformers import (
 )
 
 from my_model import Mymodel
-from QA_Conv_Model import QAConvModel
+from QA_Conv_Model import QAConvModel, QAConvModelV2
 from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter, last_processing
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
@@ -73,11 +73,11 @@ def get_model(model_args, training_args) :
     if model_args.use_pretrained_koquard_model:
         model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
         pretrained_model_state = deepcopy(model.state_dict())
-        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
+        model = QAConvModelV2(model_args.config_name, model_config, model_args.tokenizer_name)
         model.load_state_dict(pretrained_model_state)
 
     elif model_args.use_custom_model:
-        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
+        model = QAConvModelV2(model_args.config_name, model_config, model_args.tokenizer_name)
 
     else:
         model = AutoModelForQuestionAnswering.from_pretrained(
@@ -341,7 +341,10 @@ def train_mrc(model, optimizer, scaler, text_data, train_loader, test_loader, tr
                 train_loss.reset()
             else : 
                 wandb.log({'global_steps':global_steps})
-
+            if global_steps == 7000 :
+                break
+        if global_steps == 7000 :
+            break
 
 def main():
     '''각종 설정 이후 train_mrc를 실행하는 함수'''

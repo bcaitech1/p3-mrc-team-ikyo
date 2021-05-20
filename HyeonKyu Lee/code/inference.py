@@ -157,7 +157,7 @@ def post_processing_function(examples, features, predictions, text_data, data_ar
 
     elif training_args.do_eval:
         references = [
-            {"id": ex["id"], "answers": ex["answers"]}
+            {"id": ex["id"], "answers": ex["answers"].strip()}
             for ex in text_data["validation"]
         ]
         return EvalPrediction(predictions=formatted_predictions, label_ids=references)

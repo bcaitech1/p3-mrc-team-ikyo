@@ -30,7 +30,7 @@ def set_datas() :
     train_file = load_from_disk("/opt/ml/input/data/data/train_dataset")["train"]
     validation_file = load_from_disk("/opt/ml/input/data/data/train_dataset")["validation"]
 
-    with open("/opt/ml/outer_datas/split_wiki.json", "r") as f:
+    with open("/opt/ml/outer_datas/split_wiki3.json", "r") as f:
         wiki = json.load(f)
     wiki_contexts = list(dict.fromkeys([v['text'] for v in wiki.values()]))
 
@@ -76,7 +76,7 @@ def set_index_and_server() :
             }
         }
 
-    index_name = 'split-wiki-index'
+    index_name = 'split-wiki-800-index'
     print('elastic serach ping :', es.ping())
     print(es.indices.create(index=index_name, body=index_config, ignore=400))
 

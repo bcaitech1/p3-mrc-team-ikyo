@@ -24,7 +24,7 @@ from transformers import (
 )
 
 from my_model import Mymodel
-from QA_Conv_Model import QAConvModel
+from QA_Conv_Model import QAConvModel, QAConvModelV2
 from utils_qa import postprocess_qa_predictions, check_no_error, tokenize, AverageMeter, last_processing
 from trainer_qa import QuestionAnsweringTrainer
 from retrieval import SparseRetrieval
@@ -73,7 +73,7 @@ def get_model(model_args, training_args) :
         model = torch.load(f'/opt/ml/output/{model_args.model_name_or_path}/{model_args.model_name_or_path}.pt')
 
     elif model_args.use_custom_model:
-        model = QAConvModel(model_args.config_name, model_config, model_args.tokenizer_name)
+        model = QAConvModelV2(model_args.config_name, model_config, model_args.tokenizer_name)
 
     else:
         model = AutoModelForQuestionAnswering.from_pretrained(
