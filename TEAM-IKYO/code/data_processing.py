@@ -1,7 +1,6 @@
 from datasets import load_metric, load_from_disk
 from transformers import AutoConfig, AutoModelForQuestionAnswering, AutoTokenizer
 
-
 class DataProcessor():
     def __init__(self, tokenizer, max_length = 384, doc_stride = 128):
         self.tokenizer = tokenizer
@@ -90,7 +89,7 @@ class DataProcessor():
         if 'question_type' in examples.keys() :
             tokenized_examples['question_type'] = []
 
-        for i in range(len(tokenized_examples)): # modify: tokenized_examples['input_ids']
+        for i in range(len(tokenized_examples['input_ids'])):
             sequence_ids = tokenized_examples.sequence_ids(i)
             context_index = 1
             sample_index = sample_mapping[i]
@@ -125,18 +124,3 @@ class DataProcessor():
         )
 
         return val_dataset
-
-
-if __name__ == "__main__":
-    tokenizer = AutoTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator", use_fast=True)
-    data_processor = DataProcessor(tokenizer)
-    dataset = load_from_disk("/opt/ml/input/data/data/train_dataset")
-    column_names = dataset["train"].column_names
-    train_dataset = dataset["train"]
-    val_dataset = dataset["validation"]
-    print(train_dataset[0])
-    print(val_dataset[0])
-    train_dataset = data_processor.train_tokenizer(train_dataset, column_names)
-    val_dataset = data_processor.val_tokenzier(val_dataset, column_names)
-    print(train_dataset[0])
-    print(val_dataset[0])
