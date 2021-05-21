@@ -1,5 +1,5 @@
-../../*/wandb
-../../*/__pycache__
-../../*/.ipynb_checkpoints
-../data/*
-../output
+*/wandb
+*/__pycache__
+*/.ipynb_checkpoints
+data/*
+output
