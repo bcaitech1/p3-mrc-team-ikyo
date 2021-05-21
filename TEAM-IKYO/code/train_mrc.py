@@ -107,7 +107,7 @@ def get_pickle(pickle_path):
 
     return dataset
 
-def get_data(data_args, training_args, tokenizer) : dataset
+def get_data(data_args, training_args, tokenizer) :
     '''train과 validation의 dataloader와 dataset를 반환하는 함수'''
     if data_args.dataset_name == 'basic' :
         if os.path.isdir("../data/train_dataset") :
@@ -154,7 +154,7 @@ def get_data(data_args, training_args, tokenizer) : dataset
         train_dataset = dataset['train']
         val_dataset = dataset['validation']
     else :
-        raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad', 'quetion_type', 'ai_hub', 'random_masking', 'token_masking']")
+        raise Exception ("dataset_name have to be one of ['basic', 'preprocessed', 'concat', 'korquad', 'only_korquad', 'question_type', 'ai_hub', 'random_masking', 'token_masking']")
 
     if data_args.dataset_name != "token_masking":
         train_dataset = dataset['train']
