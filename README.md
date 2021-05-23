@@ -30,3 +30,6 @@ Question Answering is a field of research that creates artificial intelligence m
 ![image](https://user-images.githubusercontent.com/59340911/119260267-118d4600-bc0d-11eb-95bc-6ea68f7b0df4.png)
 
 The model we'll create in this competition is made up of 2 stages.The first stage is called "retriever", which is the step to find question-related documents, and the next stage is called "reader", which is the step to read the document we've found at 1st stage and find the answer in the document. If we concatenate these two stages properly, we can make a question answering system that can answer no matter how tough questions are. The team which create a model that makes a more accurate answer will win this stage.
+![image](https://user-images.githubusercontent.com/59340911/119260915-f1ab5180-bc0f-11eb-9ddc-cad4585bc8ce.png)
+
+---
