@@ -21,9 +21,9 @@
 ---
 
 ## 💻 Task Description
-> More Description Can be found at [AI Stages](http://boostcamp.stages.ai/competitions/31/overview/description)  
+> More Description can be found at [AI Stages](http://boostcamp.stages.ai/competitions/31/overview/description)  
   
-When you have a question like, "What is the oldest tree in Korea?" You may have asked it at a search engine. And these days it gives you an especially surprisingly accurate answer. How is it possible?
+When you have a question like, "What is the oldest tree in Korea?", you may have asked it at a search engine. And these days it gives you an especially surprisingly accurate answer. How is it possible?
 
 Question Answering is a field of research that creates artificial intelligence model that answers various kinds of questions. Among them, Open-Domain Question Answering is a more challenging issue because it has to find documents that can answer questions only using pre-built knowledge resources.
 
