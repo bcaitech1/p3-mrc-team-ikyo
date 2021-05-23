@@ -2,7 +2,7 @@
 > Hosted by [2021 Boostcamp AI Tech](https://boostcamp.connect.or.kr/)
 
 <p align="center">
-  <img width="250" src="https://github.com/bcaitech1/p3-mrc-team-ikyo/blob/main/img/logo.png">
+  <img width="250" src="https://user-images.githubusercontent.com/59340911/119260977-29b29480-bc10-11eb-8543-cf7ef73ddcd4.png">
 </p>    
 
 | [권태양](https://github.com/sunnight9507) | [류재희](https://github.com/JaeheeRyu) | [박종헌](https://github.com/PJHgh) | [오수지](https://github.com/ohsuz) | [이현규](https://github.com/LeeHyeonKyu) | [정익효](https://github.com/dlrgy22) |
