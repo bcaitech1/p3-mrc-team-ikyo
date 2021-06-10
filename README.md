@@ -2,21 +2,7 @@
 > More explanations of our codes are in 🔎[TEAM-IKYO's WIKI](https://github.com/TEAM-IKYO/Open-Domain-Question-Answering/wiki)
 
 <!-- Hosted by [2021 Boostcamp AI Tech](https://boostcamp.connect.or.kr/)-->
-
-<p align="center">
-  <img width="250" src="https://user-images.githubusercontent.com/59340911/119260977-29b29480-bc10-11eb-8543-cf7ef73ddcd4.png">
-</p>
-
-
-## 🥇 Final Scores
-||Public Leaderboard|Private Leaderboard|
-| :----------: |  :--------:  | :--------:  |
-||![image](https://user-images.githubusercontent.com/59340911/119259895-4dbfa700-bc0b-11eb-9633-6eb4d4c633d7.png)|![image](https://user-images.githubusercontent.com/59340911/119259913-5d3ef000-bc0b-11eb-8c10-2f667e960d31.png)|
-|**Score**|1st|1st|
-|**EM**|72.92|70.00|
-|**F1**|81.52|79.78|
-
----
+![TEAM-IKYO’s ODQA Final Score_v3](https://user-images.githubusercontent.com/45359366/121469986-6ea03e80-c9f8-11eb-9fd1-355e50537450.png)
 
 ## 💻 Task Description
 > More Description can be found at [AI Stages](http://boostcamp.stages.ai/competitions/31/overview/description)  
