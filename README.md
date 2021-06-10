@@ -33,9 +33,8 @@ The model we'll create in this competition is made up of 2 stages.The first stag
 ---
 
 ## 🗂 Directory
-```root
-├── 1st solution presentation.pdf
-├── README.md
+```
+p3-mrc-team-ikyo
 ├── code
 │   ├── arguments.py
 │   ├── data_processing.py
