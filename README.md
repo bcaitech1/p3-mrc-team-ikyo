@@ -31,3 +31,45 @@ The model we'll create in this competition is made up of 2 stages.The first stag
 ![image](https://user-images.githubusercontent.com/59340911/119260915-f1ab5180-bc0f-11eb-9ddc-cad4585bc8ce.png)
 
 ---
+
+## 🗂 Directory
+```root
+├── 1st solution presentation.pdf
+├── README.md
+├── code
+│   ├── arguments.py
+│   ├── data_processing.py
+│   ├── elasticsearch_retrieval.py
+│   ├── inference.py
+│   ├── mask.py
+│   ├── mk_retrieval_dataset.py
+│   ├── model
+│   │   ├── ConvModel.py
+│   │   ├── QAConvModelV1.py
+│   │   ├── QAConvModelV2.py
+│   │   └── QueryAttentionModel.py
+│   ├── prepare_dataset.py
+│   ├── question_labeling
+│   │   ├── data_set.py
+│   │   ├── question_labeling.py
+│   │   └── train.py
+│   ├── requirements.txt
+│   ├── retrieval_dataset.py
+│   ├── retrieval_inference.py
+│   ├── retrieval_model.py
+│   ├── retrieval_train.py
+│   ├── run_elastic_search.py
+│   ├── script
+│   │   ├── inference.sh
+│   │   ├── pretrain.sh
+│   │   ├── retrieval_inference.sh
+│   │   ├── retrieval_prepare_dataset.sh
+│   │   ├── retrieval_train.sh
+│   │   ├── run_elastic_search.sh
+│   │   └── train.sh
+│   ├── train_mrc.py
+│   ├── trainer_qa.py
+│   └── utils_qa.py
+└── etc
+    └── my_stop_dic.txt
+```
